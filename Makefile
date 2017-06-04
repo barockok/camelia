@@ -1,4 +1,4 @@
-LIBRDKAFKA_PATH = /tmp/onta-kafka-build
+LIBRDKAFKA_PATH = /tmp/rdkafka-build
 build_librdkafka:
 	mkdir -p ${LIBRDKAFKA_PATH}
 	cd ${LIBRDKAFKA_PATH} ; \
@@ -6,4 +6,3 @@ build_librdkafka:
 	cd ${LIBRDKAFKA_PATH}/librdkafka ; \
 	./configure --prefix ${LIBRDKAFKA_PATH}/usr && make && make install
 	PKG_CONFIG_PATH=${LIBRDKAFKA_PATH}/usr/lib/pkgconfig go get -u github.com/confluentinc/confluent-kafka-go/kafka 
-	rm -rf ${LIBRDKAFKA_PATH}
