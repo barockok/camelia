@@ -57,7 +57,7 @@ func (a *KFAgent) Init() error {
 func (a *KFAgent) Start() {
 	defer func() {
 		if r := recover(); r != nil {
-			a.logger.Infof("Recovering %v", r)
+			a.logger.Infof("Recovering from Consumer crash, %v", r)
 		}
 	}()
 
@@ -100,6 +100,9 @@ func (a *KFAgent) processMessage(e *kafka.Message) {
 	t := e.TopicPartition
 	lf := log.Fields{"topic": t.Topic, "offset": t.Offset, "partition": t.Partition, "partition_key": e.Key}
 
+	// Topest defer, to log that message have been proceed.
+	// and top of that, this one is to recover when MessageErrorHandler is panic.
+	// it'll log with panic flag, and continue the panic so the initiator (method Start).
 	defer func() {
 		log.WithFields(lf).WithField("ts", time.Now().UTC().UnixNano()).Infof("Processing done")
 		if r := recover(); r != nil {
@@ -110,6 +113,8 @@ func (a *KFAgent) processMessage(e *kafka.Message) {
 
 	log.WithFields(lf).WithField("ts", time.Now().UTC().UnixNano()).Infof("Processing message")
 
+	// this is closure to wrap Message handler,
+	// if message handler is panicking, then it'll recover and forward the message to MessageErrorHandler
 	wrapHandler := func() error {
 		defer func() {
 			if r := recover(); r != nil {
