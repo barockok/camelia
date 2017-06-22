@@ -1,0 +1,27 @@
+version: "2"
+services:
+  zk:
+    image: rawmind/alpine-zk:3.4.9
+    environment:
+      - JVMFLAGS=-Xmx512m -Xms512m
+      - ZK_DATA_DIR=/opt/zk/data
+      - ZK_INIT_LIMIT=10
+      - ZK_MAX_CLIENT_CXNS=500
+      - ZK_SYNC_LIMIT=5
+      - ZK_TICK_TIME=2000
+    ports:
+      - 2181:2181
+  kf:
+    image: barockok/alpine-kafka:0.1.6
+    environment:
+      - BROKER_ID=1
+      - KAFKA_DELETE_TOPICS=true
+      - KAFKA_LOG_RETENTION_HOURS=400
+      - KAFKA_NUM_PARTITIONS=10
+      - KAFKA_ZK_HOST=zk
+      - KAFKA_ZK_PORT=2181
+      - KAFKA_ADVERTISE_LISTENER=PLAINTEXT://${ADVERTISED_HOST}:9092
+    links:
+      - zk
+    ports:
+      - 9092:9092
