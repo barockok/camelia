@@ -1,13 +1,11 @@
 package agent
 
 import (
-	"testing"
-
 	"fmt"
-
+	"testing"
 	"time"
 
-	"github.com/barockok/camelia/agent/mocks"
+	"github.com/barockok/camelia/mocks"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/stretchr/testify/mock"
 )

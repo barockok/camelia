@@ -4,17 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/barockok/camelia/misc"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	log "github.com/sirupsen/logrus"
 )
-
-type Customerable interface {
-	SubscribeTopics(topics []string, rebalanceCb kafka.RebalanceCb) (err error)
-	Events() chan kafka.Event
-	Assign(topicPartitions []kafka.TopicPartition) (err error)
-	Unassign() (err error)
-	Close() (err error)
-}
 
 // KFAgent TODO:
 type MessageHandler func(*kafka.Message) (*kafka.Message, error)
@@ -26,14 +19,14 @@ type MessageErrorHandler func(*kafka.Message, error)
 type KFAgent struct {
 	KFAgentID           string
 	Topics              []string
-	consumer            Customerable
+	consumer            misc.Customerable
 	logger              *log.Entry
 	MessageHandler      MessageHandler
 	MessageErrorHandler MessageErrorHandler
 }
 
 // KFAgent TODO:
-func NewKFAgent(agentID string, topics []string, c Customerable, msgHandler MessageHandler, errHandler MessageErrorHandler) *KFAgent {
+func NewKFAgent(agentID string, topics []string, c misc.Customerable, msgHandler MessageHandler, errHandler MessageErrorHandler) *KFAgent {
 	a := KFAgent{
 		MessageHandler:      msgHandler,
 		MessageErrorHandler: errHandler,
@@ -106,7 +99,7 @@ func (a *KFAgent) processMessage(e *kafka.Message) {
 	defer func() {
 		log.WithFields(lf).WithField("ts", time.Now().UTC().UnixNano()).Infof("Processing done")
 		if r := recover(); r != nil {
-			a.logger.WithFields(lf).WithField("error_message", r).Errorf("Receiving panic")
+			a.logger.WithFields(lf).WithError(r.(error)).Errorf("Receiving panic")
 			panic(r.(error))
 		}
 	}()
@@ -118,7 +111,7 @@ func (a *KFAgent) processMessage(e *kafka.Message) {
 	wrapHandler := func() error {
 		defer func() {
 			if r := recover(); r != nil {
-				log.WithFields(lf).WithField("error_message", r).WithField("panic", 1).Error("Could not process message")
+				log.WithFields(lf).WithError(r.(error)).WithField("panic", 1).Error("Could not process message")
 				a.MessageErrorHandler(e, fmt.Errorf("%v", r))
 				log.WithFields(lf).Info("Message forwarded to errorHandler")
 			}
@@ -127,7 +120,7 @@ func (a *KFAgent) processMessage(e *kafka.Message) {
 		return err
 	}
 	if err := wrapHandler(); err != nil {
-		log.WithFields(lf).WithField("error_message", err).Error("Could not process message")
+		log.WithFields(lf).WithError(err).Error("Could not process message")
 		a.MessageErrorHandler(e, err)
 		log.WithFields(lf).Info("Message forwarded to errorHandler")
 	}
