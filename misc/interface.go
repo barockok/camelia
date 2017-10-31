@@ -1,13 +1,13 @@
 package misc
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3"
+	"io"
+
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-// S3Iface todo
-type S3Iface interface {
-	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
+type Uploader interface {
+	Upload(path string, reader io.Reader) error
 }
 
 type JsonAble interface {
@@ -20,4 +20,9 @@ type Customerable interface {
 	Assign(topicPartitions []kafka.TopicPartition) (err error)
 	Unassign() (err error)
 	Close() (err error)
+}
+
+type Configuration interface {
+	Configure(map[string]string) error
+	Configured() bool
 }

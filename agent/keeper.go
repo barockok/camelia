@@ -20,6 +20,7 @@ type Keeper struct {
 	tsStart     *time.Time
 	tsEnd       *time.Time
 	counter     int64
+	uploader    misc.Uploader
 }
 
 // Add todo
@@ -41,13 +42,17 @@ func (k *Keeper) Add(offset int64, msg misc.JsonAble) error {
 }
 
 // Save Todo
-func (k *Keeper) Save(s3instance misc.S3Iface) error {
+func (k *Keeper) Save() error {
+	path := buildObjectPath(k)
+	if err := k.uploader.Upload(path, k.content); err != nil {
+		return err
+	}
 	return nil
 }
 
-func NewKeeper(topic string, partition int64) *Keeper {
+func NewKeeper(topic string, partition int64, uploader misc.Uploader) *Keeper {
 	var buf bytes.Buffer
-	return &Keeper{topic: topic, partition: partition, content: &buf}
+	return &Keeper{topic: topic, partition: partition, content: &buf, uploader: uploader}
 }
 
 func buildObjectPath(k *Keeper) string {

@@ -6,7 +6,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-func toI(i interface{}) interface{} { return i }
+func ToI(i interface{}) interface{} { return i }
 
 type KFMessageJSON struct {
 	Topic     string
@@ -20,8 +20,8 @@ type KFMessage struct{ kafka.Message }
 func (kfm *KFMessage) ToJSON() ([]byte, error) {
 	_json := KFMessageJSON{
 		Topic:     *kfm.TopicPartition.Topic,
-		Partition: toI(kfm.TopicPartition.Partition).(int),
-		Offset:    toI(kfm.TopicPartition.Offset).(int),
+		Partition: ToI(kfm.TopicPartition.Partition).(int),
+		Offset:    ToI(kfm.TopicPartition.Offset).(int),
 		Key:       kfm.Key,
 		Value:     kfm.Value,
 	}
